@@ -1,4 +1,7 @@
 C    My first fortran; newton method of square roots
+C    gfortran newton.for
+C    ./a.out
+
       PROGRAM newton77
       REAL root
       REAL square
@@ -9,7 +12,7 @@ C    My first fortran; newton method of square roots
       count = 4
 C iteration through DO
       DO 10 I = 1, count
-      root = (root + square / root) / 2
+      root = (ro ot + square / root) / 2
  10   CONTINUE
       PRINT *, root
       STOP
