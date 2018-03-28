@@ -1,4 +1,4 @@
-C    Marker
+C    My first fortran; newton method of square roots
       PROGRAM newton77
       REAL root
       REAL square
@@ -8,7 +8,7 @@ C    Marker
       root = 1
       count = 4
 C iteration through DO
-      DO 10 I = 1, 4
+      DO 10 I = 1, count
       root = (root + square / root) / 2
  10   CONTINUE
       PRINT *, root

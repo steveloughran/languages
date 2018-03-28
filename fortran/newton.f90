@@ -1,4 +1,3 @@
-! Created by ${USER_NAME} on 20/02/2018.
 
 PROGRAM newton
   REAL root
