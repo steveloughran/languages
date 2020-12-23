@@ -1,6 +1,6 @@
 (* Btree *)
 
-(* use https://linux.die.net/man/1/rlwrap rlwrap for REPL)
+(* use https://linux.die.net/man/1/rlwrap rlwrap for REPL *)
 fun add x y = x + y;
 
 
