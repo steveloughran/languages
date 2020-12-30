@@ -21,49 +21,90 @@ fun assertEq(x, y) =
       raise Unsatisfied("Expected " ^ x ^ " but got " ^ y)
     else x;
 
-(* A tree *)
-datatype ('b) tree =
-    EmptyRoot of int
-  | DataNode of int * string * 'b
-  | IndexNode of int * int * (string * ('b) tree) list;
+
+(* the different comparison outcomes *)
+datatype comparison = LessThan | IsEqual | GreaterThan;
+
+fun ('a) mkcomparator (feq: 'a * 'a -> bool,
+  flt: 'a * 'a -> bool) =
+  let
+    fun compare(x, y) =
+      if feq(x, y) then IsEqual
+      else if flt(x, y) then LessThan
+      else GreaterThan
+   in
+     compare
+   end;
+
+(* The comparison code for an integer *)
+val intorder = mkcomparator(
+  fn (x: int, y) => x = y,
+  fn (x: int, y) => x < y);
+
+(* static Binding info preserved across all nodes *)
+datatype ('a) binding_info =
+  Binding of int * ('a * 'a -> comparison);
+
+
+
+(* a tree
+  empty
+  data of key + val
+  index of: highest-key, capacity, entries.
+
+*)
+datatype ('a, 'b) tree =
+    EmptyRoot of ('a) binding_info
+  | DataNode of ('a) binding_info * 'a * 'b
+  | IndexNode of ('a) binding_info * int * 'a * (('a, 'b) tree) list;
 
 (* Create an empty tree of a given branch size *)
-fun mktree (branching) = EmptyRoot(branching);
+fun mktree (binding) = EmptyRoot(binding);
 
 (* Datanode for a key *)
-fun datanodeelt (branching, key, entry)
-  = (key, DataNode(branching, key, entry));
+fun datanodeelt (binding, key, entry)
+  = DataNode(binding, key, entry);
 
-(* Failed attempt at functional programming *)
+
 (*
-fun any (NONE, NONE) = NONE
-  | any (SOME(x), _) = SOME(x)
-  | any (NONE, SOME(y)) = SOME(y);
+ Insert an entry into tree.
+ This initial impl just adds into index nodes so is just adding
+ them to a list. Flawed.
+ *)
 
 
-fun ap (op, [], x) = NONE
-  | ap (op, (h :: t), x) = SOME(op);
+fun insert (EmptyRoot(binding), key, entry) =
+      (* Empty root: replace with a simple data node *)
+      DataNode(binding, key, entry)
 
-fun apply (op, []) = NONE
-  | apply (op, (h :: t)) = SOME(op);
-*)
-(*
+  | insert (dn as DataNode(binding, k, e), key, entry) =
+      (* Data Node: create an index node above it *)
 
-    let v = op(h)
-    in
-     if v = NONE
-      then apply(op, t)
-      else v
-    end;
-*)
-(*
-    case op(h) of
-      NONE => applyToEntry(op, t)
-      SOME(v) => SOME(v);
-*)
+      IndexNode(binding, key,
+       [
+        dn,
+        datanodeelt(binding, key, entry)
+        ]
+       )
+  | insert (idx as IndexNode(binding, capacity, l), key, entry) =
+    (* Index node: add another index node. *)
+      IndexNode(binding, capacity - 1,
+        datanodeelt(binding, key, entry) :: l);
+
+(* given a list of (key, entry) tuples, add all to the existing tree. *)
+
+fun insertall (t, []) = t
+  | insertall (t, (key, entry) :: tail) =
+      insertall(insert(t, key, entry), tail);
+
+val samples =
+  [ ("a", 1), ("b", 2), ("m", 5), ("c", 2) ];
+
+val stree = insertall(mktree(3), samples);
+
 
 (* Find an entry which matches a key *)
-
+(*
 fun find(key, EmptyRoot(_)) =
     (* Empty root: no match. *)
      NONE
@@ -82,43 +123,6 @@ fun find(key, EmptyRoot(_)) =
         SOME(entry) => SOME(entry)
         | None => find(key, IndexNode(a, b, t))
       end;
+*)
 
-
-
-
-(*
- Insert an entry into tree.
- This initial impl just adds into index nodes so is just adding
- them to a list. Flawed.
- *)
-
-
-fun insert (EmptyRoot(branching), key, entry) =
-      (* Empty root: replace with a simple data node *)
-      DataNode(branching, key, entry)
-
-  | insert (dn as DataNode(branching, k, e), key, entry) =
-      (* Data Node: create an index node above it *)
-
-      IndexNode(branching, branching,
-       [
-        (k, dn) ,
-        datanodeelt(branching, key, entry)
-        ]
-       )
-  | insert (idx as IndexNode(branching, capacity, l), key, entry) =
-    (* Index node: add another index node. *)
-      IndexNode(branching, capacity - 1,
-        datanodeelt(branching, key, entry) :: l);
-
-(* given a list of (key, entry) tuples, add all to the existing tree. *)
-
-fun insertall (t, []) = t
-  | insertall (t, (key, entry) :: tail) =
-      insertall(insert(t, key, entry), tail);
-
-val samples =
-  [ ("a", 1), ("b", 2), ("m", 5), ("c", 2) ];
-
-val stree = insertall(mktree(3), samples);
 
