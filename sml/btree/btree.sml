@@ -1,6 +1,40 @@
 (* Btree *)
 
-(* use https://linux.die.net/man/1/rlwrap rlwrap for REPL *)
+(* use https://linux.die.net/man/1/rlwrap rlwrap for REPL
+
+rlwrap /usr/local/smlnj/bin/sml
+
+use("btree.sml");
+
+ *)
+
+(*
+
+Architectre
+
+EmptyPage
+RefPage: 1..order of int
+LeafPage: 1..order of records
+
+insert(emptypage, record) -> RefPage(LeafPage(record))
+insert(leafPage, record)
+  if has_capacity then
+    add record in right place
+  else
+    add ref page with two leaf pages
+
+insert(refPage, record)
+  if has_capacity then
+     add new leafPage in right place
+  else
+    find closest ref page
+     add under (This will be ref or leaf)
+     maybe: update index
+   if has increased range of page, update parent
+
+
+*)
+
 
 (*
 datatype (''a, 'b) indexentry =
@@ -11,16 +45,7 @@ datatype (''a, 'b) tree =
   | IndexNode of ''a * ''b * int * (indexentry) list;
 *)
 
-exception Unsatisfied of string;
-
-fun assert(_, true) = true
-  | assert(message, false) = raise Unsatisfied(message);
-
-fun assertEq(x, y) =
-    if not (x = y) then
-      raise Unsatisfied("Expected " ^ x ^ " but got " ^ y)
-    else x;
-
+use("assert.sml");
 
 (* the different comparison outcomes *)
 datatype comparison = LessThan | IsEqual | GreaterThan;
@@ -37,29 +62,29 @@ fun ('a) mkcomparator (feq: 'a * 'a -> bool,
    end;
 
 (* The comparison code for an integer *)
-val intorder = mkcomparator(
+val compareint = mkcomparator(
   fn (x: int, y) => x = y,
   fn (x: int, y) => x < y);
 
 (* static Binding info preserved across all nodes *)
-datatype ('a) binding_info =
-  Binding of int * ('a * 'a -> comparison);
+datatype binding_info =
+  Binding of int; (* order of the tree *)
 
 
 
 (* a tree
   empty
   data of key + val
-  index of: highest-key, capacity, entries.
+  index of: highest-key, order, entries.
 
 *)
-datatype ('a, 'b) tree =
-    EmptyRoot of ('a) binding_info
-  | DataNode of ('a) binding_info * 'a * 'b
-  | IndexNode of ('a) binding_info * int * 'a * (('a, 'b) tree) list;
+datatype ('b) tree =
+    EmptyRoot of binding_info
+  | DataNode of binding_info * int * 'b
+  | IndexNode of binding_info * int * int * (('b) tree) list;
 
-(* Create an empty tree of a given branch size *)
-fun mktree (binding) = EmptyRoot(binding);
+(* Create an empty tree of a given branch order *)
+fun mktree (order) = EmptyRoot(Binding(order));
 
 (* Datanode for a key *)
 fun datanodeelt (binding, key, entry)
@@ -77,19 +102,34 @@ fun insert (EmptyRoot(binding), key, entry) =
       (* Empty root: replace with a simple data node *)
       DataNode(binding, key, entry)
 
-  | insert (dn as DataNode(binding, k, e), key, entry) =
-      (* Data Node: create an index node above it *)
-
-      IndexNode(binding, key,
-       [
-        dn,
-        datanodeelt(binding, key, entry)
-        ]
-       )
-  | insert (idx as IndexNode(binding, capacity, l), key, entry) =
+  | insert (dn as DataNode(binding as Binding(order), dnKey, dnEntry),
+      key, entry) =
+      (*
+        Data Node: create an index node above it unless it is actually a replacement
+       *)
+       let
+        val elt = datanodeelt(binding, key, entry)
+       in
+       case compareint(key, dnKey) of
+            IsEqual =>
+              (* replace *)
+              DataNode(binding, key, entry)
+          | LessThan =>
+            IndexNode(binding, order - 1, dnKey, [elt, dn])
+          | GreaterThan =>
+            IndexNode(binding, order - 1, key, [dn, elt])
+       end
+  | insert (idx as IndexNode(binding, order, indexkey, l), key, entry) =
     (* Index node: add another index node. *)
-      IndexNode(binding, capacity - 1,
-        datanodeelt(binding, key, entry) :: l);
+      if order > 0 then
+      (* TODO: where to insert *)
+        IndexNode(binding, order - 1, indexkey,
+          datanodeelt(binding, key, entry) :: l)
+      else
+        (* TODO: grow underneath *)
+        raise Todo("No order");``
+
+
 
 (* given a list of (key, entry) tuples, add all to the existing tree. *)
 
@@ -98,9 +138,9 @@ fun insertall (t, []) = t
       insertall(insert(t, key, entry), tail);
 
 val samples =
-  [ ("a", 1), ("b", 2), ("m", 5), ("c", 2) ];
+  [ (100, "a"), (200, "b"), (100, "m"), (3, "c") ];
 
-val stree = insertall(mktree(3), samples);
+val stree = insertall(mktree(2), samples);
 
 
 (* Find an entry which matches a key *)
