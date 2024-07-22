@@ -93,7 +93,7 @@ fun datanodeelt (binding, key, entry)
 
 (*
  Insert an entry into tree.
- This initial impl just adds into index nodes so is just adding
+This initial impl just adds into index nodes so is just adding
  them to a list. Flawed.
  *)
 

@@ -1,0 +1,23 @@
+haskell
+
+https://haskell.dev/article/How_to_get_started_with_Haskell_Setting_up_your_development_environment.html
+
+
+brew install hlint ghcup cabal-install
+
+
+editing vscode
+    "haskellShell.ghci.executablePath": "file://opt/homebrew/bin/ghci",
+
+Cheat sheets
+* https://gist.github.com/jakerieger/7f4a322f4a6e70ab68dc1b09f363bcb4
+* https://github.com/anchor/haskell-cheat-sheets/blob/master/base.pdf    
+
+cabal
+https://www.haskell.org/cabal/
+cabal update
+
+stack update
+stack install haskell-dap ghci-dap haskell-debug-adapter
+
++ add  ~/.local/bin/ to PATH

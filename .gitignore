@@ -193,3 +193,5 @@ a.out
 
 
 /cobol/hello
+.idea
+*.xcodeproj
