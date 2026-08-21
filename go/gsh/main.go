@@ -7,10 +7,11 @@ import (
 
 func main() {
 	args := os.Args
-	fmt.Println(args[0]) // program path as invoked
 	if len(args) > 1 {
 		names := args[1:]
 		processAll(names)
+	} else {
+		fmt.Printf("usage %s [names]\n", args[0]) // program path as invoked
 	}
 
 }
