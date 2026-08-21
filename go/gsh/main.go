@@ -1,19 +1,39 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
-// TIP <p>To run your code, right-click the code and select <b>Run</b>.</p> <p>Alternatively, click
-// the <icon src="AllIcons.Actions.Execute"/> icon in the gutter and select the <b>Run</b> menu item from here.</p>
 func main() {
-	// TIP <p>Press <shortcut actionId="ShowIntentionActions"/> when your caret is at the underlined text
-	// to see how GoLand suggests fixing the warning.</p><p>Alternatively, if available, click the lightbulb to view possible fixes.</p>
-	s := "gopher"
-	fmt.Printf("Hello and welcome, %s!\n", s)
+	args := os.Args
+	fmt.Println(args[0]) // program path as invoked
+	if len(args) > 1 {
+		names := args[1:]
+		processAll(names)
+	}
 
-	for i := 1; i <= 5; i++ {
-		// TIP <p>To start your debugging session, right-click your code in the editor and select the Debug option.</p> <p>We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-		// for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.</p>
-		fmt.Println("i =", 100/i)
+}
+
+func processAll(names []string) {
+	out := stdout()
+	var commonInput chan string = nil
+	var commonStop []chan bool
+	// each arg is the name of an entity
+	for _, v := range names {
+		agent, stop := launch(v, out)
+		agent <- "launched " + v
+		commonInput = fanOut(agent, commonInput)
+		commonStop = append(commonStop, stop)
+		commonInput <- "new agent " + v
+	}
+
+	// at the end, so close them all.
+	commonInput <- "closing"
+	close(commonInput)
+
+	for _, v := range commonStop {
+		<-v
 	}
 }
 
@@ -21,16 +41,22 @@ func main() {
 Fanout function; generate a channel which forwards all messages to both channels.
 blocks in the process, incidentally.
 when the returned channel is closed, both supplied channels are then closed.
+
+special handling of right==nil, where the left is returned.
 */
-func fanOut(left, right chan string) chan string {
-	out := make(chan string)
+func fanOut[Alpha any](left, right chan Alpha) chan Alpha {
+	out := make(chan Alpha)
 	go func() {
 		for s := range out {
 			left <- s
-			right <- s
+			if right != nil {
+				right <- s
+			}
 		}
 		close(left)
-		close(right)
+		if right != nil {
+			close(right)
+		}
 	}()
 	return out
 }

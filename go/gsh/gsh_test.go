@@ -2,6 +2,7 @@ package main
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -18,9 +19,23 @@ func TestFanOut(t *testing.T) {
 	assertChannelClosed(t, right)
 }
 
-func assertChannelClosed(t *testing.T, left chan string) {
-	s, r := <-left
-	assert.False(t, r, "channel is open and returned %s", s)
+func TestFanOut1(t *testing.T) {
+	left := make(chan string)
+	out := fanOut(left, nil)
+	out <- "test"
+	assert.Equal(t, "test", <-left)
+	close(out)
+	assertChannelClosed(t, left)
+}
+
+func assertChannelClosed[Alpha any](t *testing.T, ch <-chan Alpha) {
+	t.Helper()
+	select {
+	case s, r := <-ch:
+		assert.False(t, r, "channel is open and returned %s", s)
+	case <-time.After(time.Second):
+		assert.Fail(t, "no response from channel")
+	}
 }
 
 func TestLaunch(t *testing.T) {
@@ -28,7 +43,6 @@ func TestLaunch(t *testing.T) {
 	alice, stop := launch("alice", stdout())
 	alice <- "hello"
 	alice <- "alice"
-	close(alice)
 	close(alice)
 	assert.True(t, <-stop)
 
@@ -49,4 +63,16 @@ func TestMulti(t *testing.T) {
 	assert.True(t, <-stop)
 	assert.True(t, <-stopJim)
 
+}
+
+func TestProcessOne(t *testing.T) {
+	var names []string
+	names = []string{"single"}
+	processAll(names)
+}
+
+func TestProcessMany(t *testing.T) {
+	var names []string
+	names = []string{"gillian", "heather", "jim", "konrad"}
+	processAll(names)
 }
