@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/tour/tree"
 )
 
 func TestFanOut(t *testing.T) {
@@ -75,4 +76,20 @@ func TestProcessMany(t *testing.T) {
 	var names []string
 	names = []string{"gillian", "heather", "jim", "konrad"}
 	processAll(names)
+}
+
+func TestSame1(t *testing.T) {
+	assert.True(t, Same(tree.New(1), tree.New(1)))
+}
+
+func TestSame10(t *testing.T) {
+	assert.True(t, Same(tree.New(10), tree.New(10)))
+}
+
+func TestDiff(t *testing.T) {
+	assert.False(t, Same(tree.New(10), tree.New(5)))
+}
+
+func TestDiff2(t *testing.T) {
+	assert.False(t, Same(tree.New(10), tree.New(15)))
 }
