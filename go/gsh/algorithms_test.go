@@ -68,3 +68,14 @@ func assertLcsConst(t *testing.T, expected float32, f []float32) {
 	assert.Equal(
 		t, expected, minCostBst(f), "expected bcs cost of %s", f)
 }
+
+func assertAdd(t *testing.T, input, expected string) {
+	result := string(mealy(mealy_add_sigma, mealy_add_lambda, input))
+	assert.Equal(
+		t, expected, result,
+		"expected mealy add of %s to be '%s'", input, result)
+}
+
+func TestAddZero(t *testing.T) {
+	assertAdd(t, "00", "01")
+}

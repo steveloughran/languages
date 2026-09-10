@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+  "unicode/utf8"
 )
 
 func knapsack(inputs []int, weigher func(int) int, limit int) int {
@@ -89,4 +90,72 @@ func minCostBst(f []float32) float32 {
 	}
 
 	return C[0][n]
+}
+
+func mealy(sigma func(int, int) int, lambda func(int, int) int, input string) []byte {
+  state := 1
+  var in int
+  output := make([]string, len(input))
+  for in = range input {
+    newstate := sigma(state, in)
+
+    out := lambda(state, in)
+    fmt.Printf("[%d] %c/%c ==> [%d]", state, in, out, newstate)
+    state = newstate
+    if newstate == 0 {
+      return fmt.Sprintf("failed to recognise %d", in)
+    }
+    output = output.append(utf8.AppendRune(output, out)
+  }
+  return output
+}
+
+func mealy_add_sigma(state int, in rune) int {
+  switch state {
+  case 1:
+    switch in {
+    case '0':
+      return 2
+    case '1':
+      return 1
+    default:
+      return 0
+    }
+  case 2:
+    switch in {
+    case '0':
+      return 2
+    case '1':
+      return 2
+    default:
+      return 0
+    }
+  default:
+    return 0
+  }
+}
+
+func mealy_add_lambda(state int, in rune) rune {
+  switch state {
+  case 1:
+    switch in {
+    case '0':
+      return '1'
+    case '1':
+      return '0'
+    default:
+      return ' '
+    }
+  case 2:
+    switch in {
+    case '0':
+      return ' '
+    case '1':
+      return ' '
+    default:
+      return ' '
+    }
+  default:
+    return ' '
+  }
 }
