@@ -1,7 +1,8 @@
 package main
 
 import (
-	"testing"
+  "slices"
+  "testing"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -69,13 +70,38 @@ func assertLcsConst(t *testing.T, expected float32, f []float32) {
 		t, expected, minCostBst(f), "expected bcs cost of %s", f)
 }
 
-func assertAdd(t *testing.T, input, expected string) {
-	result := string(mealy(mealy_add_sigma, mealy_add_lambda, input))
+func assertAdd(t *testing.T, inputsequence, expected []string) {
+  slices.Reverse(inputsequence)
+  sequence := mealy(mealy_add_sigma, mealy_add_lambda, inputsequence)
+  slices.Reverse(expected)
 	assert.Equal(
-		t, expected, result,
-		"expected mealy add of %s to be '%s'", input, result)
+		t, expected, sequence,
+		"expected mealy add of %s", inputsequence)
 }
 
 func TestAddZero(t *testing.T) {
-	assertAdd(t, "00", "01")
+	assertAdd(t, []string{"0","0"}, []string{"0","1"})
+}
+
+func TestAdd5to6(t *testing.T) {
+	assertAdd(t, []string{"0", "1","0","1"}, []string{"0","1","1","0"})
+}
+
+
+func TestReverseList(t *testing.T) {
+  assert.Equal(t, []string{"0","1","1","0", "0"}, reverseList([]string{"0","0","1", "1", "0"}))
+}
+
+
+func TestReverseList0(t *testing.T) {
+  assert.Equal(t, []string{}, reverseList([]string{}))
+}
+
+
+func TestMooreInvert(t *testing.T) {
+  inputsequence := []string{"0","1","1"}
+  sequence := moore(moore_reverse_sigma, moore_reverse_lambda, inputsequence)
+	assert.Equal(
+		t, []string{"0","1","0", "0"}, sequence,
+		"expected mealy add of %s", inputsequence)
 }

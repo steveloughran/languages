@@ -1,8 +1,7 @@
 package main
 
 import (
-	"fmt"
-  "unicode/utf8"
+  "fmt"
 )
 
 func knapsack(inputs []int, weigher func(int) int, limit int) int {
@@ -92,40 +91,44 @@ func minCostBst(f []float32) float32 {
 	return C[0][n]
 }
 
-func mealy(sigma func(int, int) int, lambda func(int, int) int, input string) []byte {
+func mealy(
+  sigma func(int, string) int,
+  lambda func(int, string) string,
+  input []string) []string {
+
   state := 1
-  var in int
-  output := make([]string, len(input))
-  for in = range input {
+  //var in string
+  output := make([]string, 0)
+  for _, in:= range input {
     newstate := sigma(state, in)
 
-    out := lambda(state, in)
-    fmt.Printf("[%d] %c/%c ==> [%d]", state, in, out, newstate)
+    var out string = lambda(state, in)
+    fmt.Printf("[%d] %s/%s ==> [%d]\n", state, in, out, newstate)
     state = newstate
     if newstate == 0 {
-      return fmt.Sprintf("failed to recognise %d", in)
+      return append(output, fmt.Sprintf("failed to recognise %s", in))
     }
-    output = output.append(utf8.AppendRune(output, out)
+    output = append(output, out)
   }
   return output
 }
 
-func mealy_add_sigma(state int, in rune) int {
+func mealy_add_sigma(state int, in string) int {
   switch state {
   case 1:
     switch in {
-    case '0':
+    case "0":
       return 2
-    case '1':
+    case "1":
       return 1
     default:
       return 0
     }
   case 2:
     switch in {
-    case '0':
+    case "0":
       return 2
-    case '1':
+    case "1":
       return 2
     default:
       return 0
@@ -135,27 +138,111 @@ func mealy_add_sigma(state int, in rune) int {
   }
 }
 
-func mealy_add_lambda(state int, in rune) rune {
+func mealy_add_lambda(state int, in string) string {
   switch state {
   case 1:
     switch in {
-    case '0':
-      return '1'
-    case '1':
-      return '0'
+    case "0":
+      return "1"
+    case "1":
+      return "0"
     default:
-      return ' '
+      return ""
     }
   case 2:
     switch in {
-    case '0':
-      return ' '
-    case '1':
-      return ' '
+    case "0":
+      return "0"
+    case "1":
+      return "1"
     default:
-      return ' '
+      return ""
     }
   default:
-    return ' '
+    return ""
+  }
+}
+
+func reverseList(input []string) []string {
+  return recursiveReverse(input)
+}
+
+func recursiveReverse(input []string) []string {
+  if len(input) <= 1 {
+    return input
+  }
+  // split to head and tail
+  reversedTail := recursiveReverse(input[1:])
+  return append(reversedTail, input[0])
+}
+
+/*
+Moore machine
+
+M = <Q, E, delta, sigma, lambda, q0>
+  here lambda: Q -> delta only (the input symbol is not involved)
+ */
+
+func moore(
+  sigma func(int, string) int,
+  lambda func(int) string,
+  input []string) []string {
+
+  state := 1
+  //var in string
+  output := make([]string, 1, len(input))
+
+  initial := lambda(1)
+  fmt.Printf("[%d/%s]\n", state, initial)
+  output[0] = initial
+  for _, in:= range input {
+    // enter new state
+    newstate := sigma(state, in)
+
+    // calculate output of new state
+    var out = lambda(newstate)
+    fmt.Printf("[%d] %s ==> [%d/%s]\n", state, in, newstate, out)
+    state = newstate
+    if newstate == 0 {
+      return append(output, fmt.Sprintf("failed to recognise %s", in))
+    }
+    output = append(output, out)
+  }
+  return output
+}
+
+func moore_reverse_sigma(state int, in string) int {
+  switch state {
+  case 1:
+    switch in {
+    case "0":
+      return 2
+    case "1":
+      return 1
+    default:
+      return 0
+    }
+  case 2:
+    switch in {
+    case "0":
+      return 2
+    case "1":
+      return 1
+    default:
+      return 0
+    }
+  default:
+    return 0
+  }
+}
+
+func moore_reverse_lambda(state int) string {
+  switch state {
+  case 1:
+      return "0"
+  case 2:
+      return "1"
+  default:
+    return "unknown"
   }
 }
