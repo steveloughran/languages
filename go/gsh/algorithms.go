@@ -2,6 +2,7 @@ package main
 
 import (
   "fmt"
+  "slices"
 )
 
 func knapsack(inputs []int, weigher func(int) int, limit int) int {
@@ -244,5 +245,67 @@ func moore_reverse_lambda(state int) string {
       return "1"
   default:
     return "unknown"
+  }
+}
+
+func dfa(
+  sigma func(int, string) int,
+  input []string,
+  final []int) bool {
+
+  fmt.Printf("\nDFA processing %s\n", input)
+  state := 1
+  for _, in:= range input {
+    newstate := sigma(state, in)
+    fmt.Printf("[%d] %s ==> [%d]\n", state, in, newstate)
+    state = newstate
+    if newstate == 0 {
+      fmt.Printf("failed to recognise %s\n", in)
+      return false;
+    }
+  }
+  // now look for the state in the final set.
+  if slices.Contains(final, state) {
+    fmt.Println("Accepted")
+    return true
+  } else {
+    fmt.Println("Rejected")
+    return false
+  }
+}
+
+func zeros_or_ones(state int, in string) int {
+  switch state {
+  case 1:
+    switch in {
+    case "0":
+      return 2
+    case "1":
+      return 3
+    default:
+      return 0
+    }
+  case 2:
+    switch in {
+    case "0":
+      return 2
+    case "1":
+      return 4
+    default:
+      return 0
+    }
+  case 3:
+    switch in {
+    case "0":
+      return 4
+    case "1":
+      return 3
+    default:
+      return 0
+    }
+    case 4:
+     return 4
+  default:
+    return 0
   }
 }

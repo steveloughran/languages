@@ -101,7 +101,26 @@ func TestReverseList0(t *testing.T) {
 func TestMooreInvert(t *testing.T) {
   inputsequence := []string{"0","1","1"}
   sequence := moore(moore_reverse_sigma, moore_reverse_lambda, inputsequence)
-	assert.Equal(
-		t, []string{"0","1","0", "0"}, sequence,
+	assert.Equal(t, []string{"0","1","0", "0"}, sequence,
 		"expected mealy add of %s", inputsequence)
+}
+
+func TestAccept(t *testing.T) {
+  assertDfaAccept(t, []string{"1","1"})
+  assertDfaAccept(t, []string{"0","0","0","0","0"})
+}
+
+func TestReject(t *testing.T) {
+  assertDfaRejected(t, []string{""})
+  assertDfaRejected(t, []string{"1","0"})
+  assertDfaRejected(t, []string{"0","0","1","0","0"})
+}
+
+func assertDfaAccept(t *testing.T, input []string) {
+  assert.True(t, dfa(zeros_or_ones, input, []int{2, 3}),
+    "Did not accept %s", input)
+}
+func assertDfaRejected(t *testing.T, input []string) {
+  assert.False(t, dfa(zeros_or_ones, input, []int{2, 3}),
+    "Did not reject %s", input)
 }
