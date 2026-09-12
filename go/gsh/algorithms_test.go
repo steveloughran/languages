@@ -124,3 +124,26 @@ func assertDfaRejected(t *testing.T, input []string) {
   assert.False(t, dfa(zeros_or_ones, input, []int{2, 3}),
     "Did not reject %s", input)
 }
+func TestNFAAccept(t *testing.T) {
+  assertNfaAccept(t, []string{"0"})
+  assertNfaAccept(t, []string{"0","0","0","0","0"})
+}
+
+func TestNFAReject(t *testing.T) {
+  assertNfaReject(t, []string{"1"})
+}
+
+
+func TestNFAReject2(t *testing.T) {
+  assertNfaReject(t, []string{"0","1","0","0","0"})
+}
+
+
+func assertNfaAccept(t *testing.T, input []string) {
+  assert.True(t, nfa(at_least_one_zero, input, []int{2}),
+    "Did not accept %s", input)
+}
+func assertNfaReject(t *testing.T, input []string) {
+  assert.False(t, nfa(at_least_one_zero, input, []int{2}),
+    "Did not reject %s", input)
+}

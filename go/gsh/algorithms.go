@@ -3,6 +3,7 @@ package main
 import (
   "fmt"
   "slices"
+// "github.com/kelindar/bitmap"
 )
 
 func knapsack(inputs []int, weigher func(int) int, limit int) int {
@@ -307,5 +308,72 @@ func zeros_or_ones(state int, in string) int {
      return 4
   default:
     return 0
+  }
+}
+
+func nfa(
+  sigma func(int, string) []int,
+  input []string,
+  final []int) bool {
+
+  fmt.Printf("\nNFA processing %s\n", input)
+  size := 10
+  state := make([]int,1, size)
+  state[0] = 1
+
+  for _, in:= range input {
+    newstate := make([]int, 0, size)
+    for _, r := range state {
+      // merge
+      for _, st:= range sigma(r, in) {
+        if !slices.Contains(newstate, st) {
+          newstate = append(newstate, st)
+        }
+      }
+    }
+    fmt.Printf("[%d] %s ==> [%d]\n", state, in, newstate)
+    state = newstate
+    if len(newstate) == 0 {
+      fmt.Printf("failed to recognise %s\n", in)
+      return false;
+    }
+  }
+  // now look for the state in the final set.
+  for _, fin := range final {
+    if slices.Contains(state, fin) {
+      fmt.Println("Accepted")
+      return true
+    }
+  }
+  fmt.Println("Rejected")
+  return false
+}
+
+func at_least_one_zero(state int, in string) []int {
+  none := []int{}
+
+  switch state {
+  case 1:
+    switch in {
+    case "0":
+      return []int{1, 2}
+    case "1":
+      return []int{3}
+    default:
+      return none
+    }
+  case 2:
+    switch in {
+    case "0":
+      return []int{2}
+    case "1":
+      return []int{3}
+    default:
+      return none
+    }
+  case 3:
+    return none
+  default:
+    return none
   }
 }
